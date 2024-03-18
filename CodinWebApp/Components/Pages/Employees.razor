@@ -1,0 +1,201 @@
+﻿@* @page "/employees" *@
+@* @rendermode InteractiveServer
+@using Blazored.LocalStorage
+@using CodinWebApp.Models
+@inject ILocalStorageService localStorage
+
+<MyMudProviders />
+<PageTitle>Employees</PageTitle>
+<MudText Class="mb-8">Employees List</MudText>
+
+@if (employees == null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="employees" Hover="true" SortLabel="Sort By" Elevation="0">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<employees, object>(x=>x.employee_id)">Employee ID</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<employees, object>(x=>x.employee_name)">Employee Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<employees, object>(x=>x.email)">Email</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<employees, object>(x=>x.doj)">DOB</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<employees, object>(x=>x.dol)">DOL</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="employee_id">@context.employee_id</MudTd>
+                <MudTd DataLabel="employee_name">@context.employee_name</MudTd>
+                <MudTd DataLabel="email">@context.email</MudTd>
+                <MudTd DataLabel="doj">@context.doj</MudTd>
+                <MudTd DataLabel="dol">@context.dol</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{25,50,75,100,125,150}" />
+            </PagerContent>
+        </MudTable>
+}
+
+@code {
+
+
+    private List<employees> employees;
+    private bool hasRendered = false;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await localStorage.ContainKeyAsync("CodinWebAppIsAuthenticated");
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/logout");
+        }
+
+
+        using (var dbContext = new ApplicationDbContext())
+        {
+            employees = dbContext.employees.ToList();
+        }
+    }
+} *@
+
+
+@page "/employees"
+@rendermode InteractiveServer
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
+@inject ISnackbar snackbar
+@using CodinWebApp.Models
+@using MudBlazor
+@inject IDialogService DialogService
+
+<MyMudProviders />
+<PageTitle>Employees</PageTitle>
+<MudText Class="mb-8">Employees List</MudText>
+
+<!-- Display employees in a table -->
+@if (employees == null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+
+    <!-- Add new button for adding a new employee -->
+    <MudButton Variant="Variant.Filled" Color="Color.Success" Class="float-right mb-2 mr-2" @onclick="NavigateToAddEmployee">Add New</MudButton>
+
+
+    <MudTable Items="employees" Hover="true" SortLabel="Sort By" Elevation="0">
+        <!-- Define table columns -->
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<employees, object>(x => x.employee_id)">Employee ID</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<employees, object>(x => x.employee_name)">Employee Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<employees, object>(x => x.email)">Email</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<employees, object>(x => x.doj)">DOJ</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<employees, object>(x => x.dol)">DOL</MudTableSortLabel></MudTh>
+            <MudTh>Action</MudTh> <!-- Add column for actions (edit, delete) -->
+        </HeaderContent>
+        <!-- Define table rows -->
+        <RowTemplate>
+            <MudTd DataLabel="EmployeeId">@context.employee_id</MudTd>
+                <MudTd DataLabel="EmployeeName">@context.employee_name</MudTd>
+                <MudTd DataLabel="Email">@context.email</MudTd>
+                <MudTd DataLabel="doj">@context.doj</MudTd>
+                <MudTd DataLabel="dol">@context.dol</MudTd>
+                <!-- Add action buttons for each row -->
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" @onclick="() => EditEmployee(context)">Edit</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" @onclick="() => DeleteEmployee(context)">Delete</MudButton>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{25,50,75,100,125,150}" />
+            </PagerContent>
+        </MudTable>
+}
+
+@code {
+
+    private List<employees> employees;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+
+    private void NavigateToAddEmployee()
+    {
+        NavigationManager.NavigateTo("/addEmployee");
+    }
+
+    // Method to load employees from the database
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await localStorage.ContainKeyAsync("CodinWebAppIsAuthenticated");
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/logout");
+        }
+
+        using (var dbContext = new ApplicationDbContext())
+        {
+            employees = dbContext.employees.ToList();
+        }
+    }
+
+    // Method to edit an employee
+    private void EditEmployee(employees employee)
+    {
+        // Navigate to the edit employee page
+        NavigationManager.NavigateTo($"/editEmployee/{employee.employee_id}");
+    }
+
+    // Method to delete an employee
+    private async Task DeleteEmployee(employees employee)
+    {
+        // Confirm the delete operation with the user
+        // var confirmed = await MudDialogService.ShowMessageBox(
+        //     "Delete Employee",
+        //     $"Are you sure you want to delete employee {employee.employee_id}?",
+        //     yesText: "Yes",
+        //     noText: "No");
+
+        var confirmed = true;
+
+        // If the user confirms the delete operation
+        if (confirmed == true)
+        {
+            try
+            {
+                // Delete the employee from the database
+                using (var dbContext = new ApplicationDbContext())
+                {
+                    dbContext.employees.Remove(employee);
+                    await dbContext.SaveChangesAsync();
+                }
+
+                // Refresh the list of employees
+                await RefreshEmployees();
+            }
+            catch (Exception ex)
+            {
+                // Display an error message if the delete operation fails
+                snackbar.Add($"Failed to delete employee: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    // Method to refresh the list of employees
+    private async Task RefreshEmployees()
+    {
+        using (var dbContext = new ApplicationDbContext())
+        {
+            employees = dbContext.employees.ToList();
+        }
+    }
+}
+
+
+
+

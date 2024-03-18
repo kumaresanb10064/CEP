@@ -1,0 +1,68 @@
+﻿@rendermode InteractiveServer
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
+
+
+<MudNavMenu>
+    @if (IsUserLoggedIn)
+    {
+        <MudNavLink Href="employees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisedUserCircle">Employees</MudNavLink>
+        <MudNavLink Href="employees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Note">Project</MudNavLink>
+        <MudNavLink Href="employees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">Customer</MudNavLink>
+        <MudNavLink @onclick="Logout" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+    }
+    else
+    {
+    }
+</MudNavMenu>
+
+
+@* @if (IsUserLoggedIn)
+{
+    NavigationManager.NavigateTo("/employees");
+} *@
+
+@code {
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    private bool IsUserLoggedIn { get; set; }
+    private bool hasRendered = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsUserLoggedIn)
+        {
+            NavigationManager.NavigateTo("/employees");
+        }
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (firstRender && !hasRendered)
+        // {            
+            await CheckAuthentication();
+            hasRendered = true;
+        //}
+    }
+
+    private async Task CheckAuthentication()
+    {
+        IsUserLoggedIn = await localStorage.ContainKeyAsync("CodinWebAppIsAuthenticated");
+        StateHasChanged(); // Ensure the component re-renders after the asynchronous call
+    }
+    private async Task Logout()
+    {
+        await localStorage.RemoveItemAsync("CodinWebAppIsAuthenticated");
+        await localStorage.RemoveItemAsync("CodinWebAppUserId");
+        IsUserLoggedIn = false;
+        StateHasChanged(); // Ensure the component re-renders after the asynchronous call
+
+        NavigationManager.NavigateTo("/logout");
+    }
+}
+
+

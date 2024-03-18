@@ -1,0 +1,72 @@
+﻿@using CodinWebApp.Components
+@inherits LayoutComponentBase
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
+<MyMudThemeProvider />
+
+<div class="page mud-layout">
+    <div class="sidebar mud-elevation-1">
+        <div class="top-row mud-drawer-head">
+            <div>
+                <a class="navbar-brand">CEP</a>
+            </div>
+        </div>
+
+        <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+        <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+            <NavMenu />
+        </div>
+    </div>
+    <main>
+        <div class="top-row px-4">
+           @*  <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Style="color: white;" Link="https://mudblazor.com/" Target="_blank" />
+            <MudIconButton Icon="@Icons.Custom.Brands.TikTok" Style="color: white;" /> *@
+
+            @if (!string.IsNullOrEmpty(loggedInUsername))
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Person" Style="color: white;"/>
+                <MudTypography Variant="Typo.h6" style="color:white">Hi @loggedInUsername</MudTypography>
+            }
+            else
+            {
+                <MudTypography Variant="Typo.h6"></MudTypography>
+            }
+        </div>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-2 pt-2">
+            @Body
+        </MudContainer>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    
+    private string loggedInUsername;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (firstRender)
+        // {
+            await GetLoggedInUsernameAsync();
+            StateHasChanged();
+        //}
+    }
+
+    private async Task GetLoggedInUsernameAsync()
+    {
+        loggedInUsername = await localStorage.GetItemAsync<string>("CodinWebAppUserId");
+        StateHasChanged();
+    }
+
+    // This method can be invoked after a successful login to update the loggedInUsername
+    public async Task UpdateLoggedInUsername(string username)
+    {
+        loggedInUsername = username;
+        StateHasChanged();
+    }
+
+}

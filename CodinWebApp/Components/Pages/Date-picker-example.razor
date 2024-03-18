@@ -1,0 +1,8 @@
+﻿@page "/dateexample"
+<MudDatePicker Label="Start Date" @bind-Date="@StartDate" PickerVariant="PickerVariant.Dialog" />
+<MudTextField Label="SelectedDate" @bind-Value="@StartDate" />
+<MudText Typo="Typo.h3">Selected Date is: @StartDate</MudText>
+
+    @code {
+    public DateTime? StartDate { get; set; }
+}

@@ -1,0 +1,85 @@
+﻿@page "/home"
+
+<PageTitle>Home</PageTitle>
+
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+       
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Class="text-center"><b>Total Employees:</b> @TotalEmployees</MudText>
+                    <p class="text-center">Click here to manage employees...</p>
+                    <div class="mt-auto text-center">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="NavigateToEmployees">View Employees</MudButton>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 100%"></MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+
+
+
+    @code {
+
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+
+    // Property to store the total number of employees
+    private int TotalEmployees;
+
+    // Method to fetch the total number of employees from the database
+    private void GetTotalEmployees()
+    {
+        using (var dbContext = new ApplicationDbContext())
+        {
+            TotalEmployees = dbContext.employees.Count();
+        }
+    }
+
+    // Method to navigate to another page
+    private void NavigateToEmployees()
+    {
+        NavigationManager.NavigateTo("/employees");
+    }
+
+    protected override void OnInitialized()
+    {
+        // Call the method to fetch the total number of employees
+        GetTotalEmployees();
+    }
+
+
+}

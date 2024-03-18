@@ -1,0 +1,115 @@
+﻿@page "/addEmployee"
+@using CodinWebApp.Models
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
+
+<h3>Add New Employee</h3>
+
+@* <EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+    <div class="mud-form-group">
+        <label for="employee_name">Employee Name:</label>
+        <InputText id="employee_name" @bind-Value="employee.employee_name" class="form-control" />
+    </div>
+
+
+    <div class="mud-form-group">
+        <label for="email">Email:</label>
+        <InputText id="email" @bind-Value="employee.email" class="form-control" />
+    </div>
+
+    <div class="mud-form-group">
+        <label for="doj">Date of Joining:</label>
+        <InputDate id="doj" @bind-Value="employee.doj" class="form-control" />
+    </div>
+
+    <div class="mud-form-group">
+        <label for="dol">Date of Leaving:</label>
+        <InputDate id="dol" @bind-Value="employee.dol" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm> *@
+
+
+@* <EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+    <div class="mud-form-group">
+        <label class="mud-label" for="employee_name">Employee Name:</label>
+        <InputText class="mud-input" id="employee_name" @bind-Value="employee.employee_name" />
+    </div>
+
+    <div class="mud-form-group">
+        <label class="mud-label" for="email">Email:</label>
+        <InputText class="mud-input" id="email" @bind-Value="employee.email" />
+    </div>
+
+    <div class="mud-form-group">
+        <label class="mud-label" for="doj">Date of Joining:</label>
+        <InputDate class="mud-input" id="doj" @bind-Value="employee.doj" />
+    </div>
+
+    <div class="mud-form-group">
+        <label class="mud-label" for="dol">Date of Leaving:</label>
+        <InputDate class="mud-input" id="dol" @bind-Value="employee.dol" />
+    </div>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit" Type="ButtonType.Submit">Save</MudButton>
+</EditForm> *@
+
+<EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+    <MudItem xs="12" md="6">
+        <MudTextField Label="Employee Name" @bind-Value="employee.employee_name" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudTextField Label="Email" @bind-Value="employee.email" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        @* <MudDatePicker Label="Date of Joining" @bind-Value="employee.doj" /> *@
+        <MudDatePicker Label="Date of Joining" Editable="true" @bind-Value="employee.doj" DateFormat="yyyy-MM-dd" PickerVariant="PickerVariant.Dialog" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        @* <MudDatePicker Label="Date of Leaving" Editable="true" @bind-Value="employee.dol" /> *@
+        <MudDatePicker Label="Date of Leaving" Editable="true" @bind-Value="employee.dol" DateFormat="yyyy-MM-dd" PickerVariant="PickerVariant.Dialog" />
+    </MudItem>
+
+    <div style="display: flex; justify-content: left; margin-top: 16px;">
+        <MudButton Type="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Save</MudButton>
+    </div>
+</EditForm>
+
+@code {
+
+    private employees employee = new employees();
+
+    [Inject]
+    private NavigationManager navigationManager { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await localStorage.ContainKeyAsync("CodinWebAppIsAuthenticated");
+        if (!isAuthenticated)
+        {
+            navigationManager.NavigateTo("/logout");
+        }
+
+    }
+
+    private async Task HandleSubmit()
+    {
+        using (var dbContext = new ApplicationDbContext())
+        {
+            // Adding a new employee, so add it to the database
+            dbContext.employees.Add(employee);
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        navigationManager.NavigateTo("/dashboard", true); // Redirect to the employee list page
+    }
+}

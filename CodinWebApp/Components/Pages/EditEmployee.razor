@@ -1,0 +1,190 @@
+﻿@page "/editEmployee/{Id}"
+@using CodinWebApp.Models
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
+
+<h3>Edit Employee</h3>
+
+@if (employee != null)
+{
+    @* <EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+        <div class="form-group">
+            <label for="employee_name">Employee Name:</label>
+            <InputText id="employee_name" @bind-Value="employee.employee_name" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <InputText id="email" @bind-Value="employee.email" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label for="doj">Date of Joining:</label>
+            <InputDate id="doj" @bind-Value="employee.doj" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label for="dol">Date of Leaving:</label>
+            <InputDate id="dol" @bind-Value="employee.dol" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm> *@
+
+
+
+    @* <EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+        <div class="mud-form-group">
+            <label class="mud-label" for="employee_name">Employee Name:</label>
+            <MudTextField @bind-Value="employee.employee_name" />
+        </div>
+
+        <div class="mud-form-group">
+            <label class="mud-label" for="email">Email:</label>
+            <MudTextField @bind-Value="employee.email" />
+        </div>
+
+        <div class="mud-form-group">
+            <label class="mud-label" for="doj">Date of Joining:</label>
+            <MudDatePicker @bind-Value="employee.doj" />
+        </div>
+
+        <div class="mud-form-group">
+            <label class="mud-label" for="dol">Date of Leaving:</label>
+            <MudDatePicker @bind-Value="employee.dol" />
+        </div>
+
+        <div style="display: flex; justify-content: left; margin-top: 16px;">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Type="ButtonType.Submit" OnClick="HandleSubmit">Save</MudButton>
+        </div>        
+    </EditForm> *@
+
+
+   @*  <MudContainer>
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" md="8">
+                <EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+                    <div class="mud-form-group">
+                        <label class="mud-label" for="employee_name">Employee Name:</label>
+                        <MudTextField @bind-Value="employee.employee_name" />
+                    </div>
+                    <div class="mud-form-group">
+                        <label class="mud-label" for="email">Email:</label>
+                        <MudTextField @bind-Value="employee.email" />
+                    </div>
+                    <div class="mud-form-group">
+                        <label class="mud-label" for="doj">Date of Joining:</label>
+                        <MudDatePicker @bind-Value="employee.doj" />
+                    </div>
+                    <div class="mud-form-group">
+                        <label class="mud-label" for="dol">Date of Leaving:</label>
+                        <MudDatePicker @bind-Value="employee.dol" />
+                    </div>
+
+                    <div class="mud-form-group">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Type="ButtonType.Submit" OnClick="HandleSubmit">Save</MudButton>
+                    </div>
+                </EditForm>
+            </MudItem>
+        </MudGrid>
+    </MudContainer> *@
+
+
+    <EditForm Model="@employee" OnValidSubmit="HandleSubmit">
+        <MudItem xs="12" md="6">
+            <MudTextField Label="Employee Name" @bind-Value="employee.employee_name" />
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudTextField Label="Email" @bind-Value="employee.email" />
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            @* <MudDatePicker Label="Date of Joining" @bind-Value="employee.doj" /> *@
+            <MudDatePicker Label="Date of Joining" Editable="true" @bind-Value="employee.doj" DateFormat="yyyy-MM-dd" PickerVariant="PickerVariant.Dialog" />
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            @* <MudDatePicker Label="Date of Leaving" Editable="true" @bind-Value="employee.dol" /> *@
+            <MudDatePicker Label="Date of Leaving" Editable="true" @bind-Value="employee.dol" DateFormat="yyyy-MM-dd" PickerVariant="PickerVariant.Dialog" />
+        </MudItem>       
+
+        <div style="display: flex; justify-content: left; margin-top: 16px;">
+            <MudButton Type="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Save</MudButton>
+        </div>
+    </EditForm>
+
+
+
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = "0";
+    private employees employee;
+
+    [Inject]
+    private NavigationManager navigationManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await localStorage.ContainKeyAsync("CodinWebAppIsAuthenticated");
+        if (!isAuthenticated)
+        {
+            navigationManager.NavigateTo("/logout");
+        }
+
+
+        if (!string.IsNullOrEmpty(Id))
+        {
+            if (int.TryParse(Id, out int employeeId))
+            {
+                using (var dbContext = new ApplicationDbContext())
+                {
+                    employee = await dbContext.employees.FindAsync(employeeId);
+                }
+            }
+            else
+            {
+                // Handle invalid employee ID
+                navigationManager.NavigateTo("/employees"); // Redirect to a default page
+            }
+        }
+        else
+        {
+            // Adding a new employee
+            employee = new employees(); // Create a new instance of employees
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        using (var dbContext = new ApplicationDbContext())
+        {
+            if (employee.employee_id == 0)
+            {
+                // New employee, so add it to the database
+                dbContext.employees.Add(employee);
+            }
+            else
+            {
+                // Existing employee, so update it in the database
+                dbContext.employees.Update(employee);
+            }
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        navigationManager.NavigateTo("/dashboard", true); // Redirect to the employee list page
+    }
+}
+
+
+

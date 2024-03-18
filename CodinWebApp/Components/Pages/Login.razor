@@ -1,0 +1,123 @@
+﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@inject ISnackbar snackbar
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Http
+@using Blazored.LocalStorage
+
+<MyMudProviders />
+
+<div style="display: flex; justify-content: center; align-items: center; height: 60vh;">
+    <MudCard Style="width: 400px;">
+        <MudCardContent>
+            <h1 style="text-align: center;">Login</h1>
+            <div style="margin-bottom: 16px;">
+                <MudTextField @bind-Value="@username" Label="Username" Required FullWidth />
+             </div>
+             <div style="margin-bottom: 16px;">
+                 <MudTextField @bind-Value="@password" Label="Password" Type="InputType.Password" Required InputType="InputType.Password" FullWidth />
+             </div>
+         </MudCardContent>
+         <MudCardActions>
+             <div style="display: flex; justify-content: center; margin-top: 16px;">
+                 <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="HandleLogin" Disabled="@loading">
+                     Login
+                     @if (loading)
+                    {
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                    }
+                </MudButton>
+            </div>
+        </MudCardActions>
+    </MudCard>
+</div>
+
+
+
+ @code {
+    private string username;
+    private string password;
+    private string localStorageData;
+    private bool loading = false;
+
+    [Inject]
+    private ILocalStorageService localStorage { get; set; }
+
+    [Inject]
+    private NavigationManager navigationManager { get; set; }
+
+    private async Task HandleLogin()
+    {
+        loading = true; // Start loader
+
+        var authenticated = await AuthenticateUser();
+        if (authenticated)
+        {
+            SetLocalStorageData();
+            StateHasChanged();
+
+            loading = false; // Stop loader
+            navigationManager.NavigateTo("/employees");
+        }
+        else
+        {
+            loading = false; // Stop loader
+            ShowErrorMessage("Invalid username or password. Please try again.");
+        }
+    }
+
+    private async Task SetLocalStorageData()
+    {
+        await localStorage.SetItemAsync("CodinWebAppIsAuthenticated", true);
+        await localStorage.SetItemAsync("CodinWebAppUserId", username);
+    }
+
+    private async Task GetLocalStorageData()
+    {
+        localStorageData = await localStorage.GetItemAsync<string>("CodinWebAppIsAuthenticated");
+    }
+
+    private void ShowErrorMessage(string message)
+    {       
+        snackbar.Add(message, Severity.Error);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        StateHasChanged();
+    }
+
+    private async Task<bool> AuthenticateUser()
+    {
+        try
+        {
+            using (var dbContext = new ApplicationDbContext())
+            {
+                var user = await dbContext.users.FirstOrDefaultAsync(u => u.username == username && u.password == password);
+                return user != null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while authenticating user: {ex.Message}");
+            return false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Clear local storage
+        await ClearLocalStorage();
+
+        // Other initialization logic...
+    }
+    private async Task ClearLocalStorage()
+    {
+        // Remove items from local storage
+        await localStorage.RemoveItemAsync("CodinWebAppIsAuthenticated");
+        await localStorage.RemoveItemAsync("CodinWebAppUserId");
+    }
+
+}
+
